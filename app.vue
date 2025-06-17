@@ -1,7 +1,7 @@
 <template>
   <div class="map container">
     <ClientOnly>
-    <MapBox />
+      <MapBox />
     </ClientOnly>
   </div>
 </template>

@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from "vue";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "leaflet-routing-machine";
-import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
-const mapContainer = ref<HTMLElement | null>(null);
-const map = ref<L.Map | null>(null);
-const routingControl = ref<any>(null);
+const mapContainer = ref<HTMLElement | null>(null); // ссылка на div с картой
+const map = ref<L.Map | null>(null); // объект карты
+const routingControl = ref<any>(null); // контрол маршрута
 
-const startInput = ref("");
-const endInput = ref("");
-const startResults = ref<any[]>([]);
-const endResults = ref<any[]>([]);
+const startInput = ref(""); // значение поля "откуда"
+const endInput = ref(""); // значение поля "куда"
+const startResults = ref<any[]>([]); // список найденных адресов "откуда"
+const endResults = ref<any[]>([]); // список найденных адресов "куда"
 
-const routeInfo = ref<{ distance: number; time: number } | null>(null);
+const routeInfo = ref<{ distance: number; time: number } | null>(null); // инфа о маршруте
 
+let LRM: any; // сюда подгружается leaflet-routing-machine
+
+// Очистка маршрута и полей
 function clearRoute() {
   if (routingControl.value) {
-    routingControl.value.remove();
+    routingControl.value.remove(); // удаляем маршрут
     routingControl.value = null;
   }
   routeInfo.value = null;
@@ -26,29 +26,37 @@ function clearRoute() {
   endInput.value = "";
 }
 
+// Поиск адресов через Nominatim
 async function searchAddress(type: "start" | "end") {
   const query = type === "start" ? startInput.value : endInput.value;
   if (query.length < 3) {
+    // Очищаем результаты, если слишком короткий запрос
     if (type === "start") startResults.value = [];
     else endResults.value = [];
     return;
   }
+
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
     query
-  )}&addressdetails=1&limit=5`;
+  )}&addressdetails=1&limit=15`;
+
   const res = await fetch(url);
   const data = await res.json();
+
   if (type === "start") startResults.value = data;
   else endResults.value = data;
 }
 
+// Установка точки маршрута
 function setWaypoint(type: "start" | "end", place: any) {
   if (!map.value) return;
   const latlng = L.latLng(place.lat, place.lon);
+
+  // Если маршрутизатор не создан — создаем
   if (!routingControl.value) {
-    routingControl.value = L.Routing.control({
-      waypoints: [],
-      router: L.Routing.osrmv1({
+    routingControl.value = LRM.Routing.control({
+      waypoints: [], // изначально пусто
+      router: LRM.Routing.osrmv1({
         serviceUrl: "https://router.project-osrm.org/route/v1",
       }),
       lineOptions: {
@@ -56,12 +64,12 @@ function setWaypoint(type: "start" | "end", place: any) {
       },
       show: false,
       addWaypoints: true,
-      draggableWaypoints: true,
-      routeWhileDragging: true,
+      draggableWaypoints: true, // точки можно перетаскивать
+      routeWhileDragging: true, // пересчет маршрута при перетаскивании
     }).addTo(map.value);
   }
 
-  let waypoints = routingControl.value.getWaypoints();
+  const waypoints = routingControl.value.getWaypoints();
 
   if (type === "start") {
     waypoints[0] = latlng;
@@ -73,33 +81,34 @@ function setWaypoint(type: "start" | "end", place: any) {
   routeInfo.value = null;
 }
 
-watch(startInput, async (val) => {
-  if (
-    startResults.value.length === 1 &&
-    val === startResults.value[0].display_name
-  ) {
-    setWaypoint("start", startResults.value[0]);
-  }
-});
+// Обработка выбора адреса из списка
+function handleSelect(type: "start" | "end") {
+  const list = type === "start" ? startResults.value : endResults.value;
+  const query = type === "start" ? startInput.value : endInput.value;
 
-watch(endInput, async (val) => {
-  if (
-    endResults.value.length === 1 &&
-    val === endResults.value[0].display_name
-  ) {
-    setWaypoint("end", endResults.value[0]);
+  const found = list.find((item) => item.display_name === query);
+  if (found) {
+    setWaypoint(type, found);
   }
-});
+}
 
-onMounted(() => {
+// Инициализация карты
+onMounted(async () => {
+  // Динамический импорт routing-machine (работает только в браузере)
+  LRM = await import("leaflet-routing-machine");
+  await import("leaflet-routing-machine/dist/leaflet-routing-machine.css");
+
   if (!mapContainer.value) return;
-  map.value = L.map(mapContainer.value).setView([25.2744, 55.3082], 10);
 
+  // Центр карты — Москва, масштаб — 6 (Россия)
+  map.value = L.map(mapContainer.value).setView([55.751244, 37.618423], 6);
+
+  // Слой OpenStreetMap
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "OpenStreetMap contributors",
   }).addTo(map.value);
 
-  // Listen for routing events to update info panel
+  // Обработка завершения маршрута
   map.value.on("routingroutefound", (e: any) => {
     if (!e.route) return;
     routeInfo.value = {
@@ -109,20 +118,15 @@ onMounted(() => {
   });
 });
 </script>
+
 <template>
   <div class="map-box">
     <div class="map-box__controls">
-      <!-- <input
-        type="text"
+      <input
         v-model="startInput"
         @input="searchAddress('start')"
-        placeholder="Введите старт"
-        list="start-list"
-      /> -->
-      <BaseInput
-        v-model="startInput"
-        @input="searchAddress('start')"
-        placeholder="Введите старт"
+        @change="handleSelect('start')"
+        placeholder="Откуда"
         list="start-list"
       />
       <datalist id="start-list">
@@ -133,17 +137,11 @@ onMounted(() => {
         />
       </datalist>
 
-      <!-- <input
-        type="text"
+      <input
         v-model="endInput"
         @input="searchAddress('end')"
-        placeholder="Введите финиш"
-        list="end-list"
-      /> -->
-      <BaseInput
-        v-model="endInput"
-        @input="searchAddress('end')"
-        placeholder="Введите старт"
+        @change="handleSelect('end')"
+        placeholder="Куда"
         list="end-list"
       />
       <datalist id="end-list">
@@ -154,32 +152,33 @@ onMounted(() => {
         />
       </datalist>
 
-      <BaseButton label="Очистить маршрут" @click="clearRoute" style="width: 100%;" />
+      <!-- Кнопка очистки -->
+      <button @click="clearRoute">Очистить маршрут</button>
     </div>
 
+    <!-- Контейнер карты -->
     <div ref="mapContainer" class="map-container"></div>
 
+    <!-- Информация о маршруте -->
     <div v-if="routeInfo" class="route-info">
       <p>Расстояние: {{ (routeInfo.distance / 1000).toFixed(2) }} км</p>
       <p>Время: {{ (routeInfo.time / 60).toFixed(0) }} мин</p>
     </div>
   </div>
 </template>
-<style scoped lang="scss">
-.map-box {
-  width: 100%;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 4fr;
-  gap: 30px;
 
-  &__controls {
-    margin-bottom: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
+<style scoped>
+.map-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.map-box__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .map-container {
@@ -187,11 +186,10 @@ onMounted(() => {
   height: 600px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  overflow: hidden;
 }
 
 .route-info {
-  margin-top: 10px;
   font-weight: bold;
+  margin-top: 10px;
 }
 </style>
