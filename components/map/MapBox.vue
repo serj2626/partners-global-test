@@ -101,7 +101,10 @@ onMounted(async () => {
   if (!mapContainer.value) return;
 
   // Центр карты — Москва, масштаб — 6 (Россия)
-  map.value = L.map(mapContainer.value).setView([55.751244, 37.618423], 6);
+  map.value = L.map(mapContainer.value, {
+    scrollWheelZoom: false,
+    zoomControl: true,
+  }).setView([55.751244, 37.618423], 6);
 
   // Слой OpenStreetMap
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
