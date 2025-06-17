@@ -1,22 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
 import * as L from "leaflet";
 
 const mapContainer = ref<HTMLElement | null>(null);
 const map = ref<L.Map | null>(null);
 const markers = ref<L.Marker[]>([]); // Теперь храним массив маркеров
 const line = ref<L.Polyline | null>(null); // Для линии между точками
-
-async function reverseGeocode(lat: number, lon: number) {
-  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`;
-  const res = await fetch(url, {
-    headers: {
-      "Accept-Language": "ru",
-    },
-  });
-  const data = await res.json();
-  return data;
-}
 
 function clearMarkers() {
   markers.value.forEach((marker) => marker.remove());
@@ -42,7 +30,7 @@ onMounted(() => {
   if (!mapContainer.value) return;
 
   map.value = L.map(mapContainer.value, {
-    scrollWheelZoom: false,
+    scrollWheelZoom: true,
     zoomControl: true,
   }).setView([55.751244, 37.618423], 6);
 
