@@ -1,103 +1,194 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref, watch, nextTick } from "vue";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
-
-const props = defineProps({
-  center: {
-    type: Array,
-    default: () => [25.2744, 55.3082],
-  },
-  zoom: {
-    type: Number,
-    default: 10,
-  },
-});
+import "leaflet-routing-machine";
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
 const mapContainer = ref<HTMLElement | null>(null);
 const map = ref<L.Map | null>(null);
-const roadsLayer = ref<L.GeoJSON | null>(null);
+const routingControl = ref<any>(null);
 
-// Стили для дорог
-const roadStyle = {
-  color: "#555",
-  weight: 3,
-  opacity: 0.7,
-};
+const startInput = ref("");
+const endInput = ref("");
+const startResults = ref<any[]>([]);
+const endResults = ref<any[]>([]);
 
-// Загрузка данных о дорогах
-async function loadRoadsData() {
-  try {
-    // URL для данных HOT OSM Roads для ОАЭ (можете заменить на нужный регион)
-    const response = await fetch(
-      "https://data.humdata.org/dataset/hotosm_are_roads/resource/8d2f0e6c-8b50-4bde-9a3a-6f2b4b1a8f1f/download/are_roads.geojson"
-    );
+const routeInfo = ref<{ distance: number; time: number } | null>(null);
 
-    if (!response.ok) throw new Error("Failed to fetch roads data");
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error loading roads data:", error);
-    return null;
+function clearRoute() {
+  if (routingControl.value) {
+    routingControl.value.remove();
+    routingControl.value = null;
   }
+  routeInfo.value = null;
+  startInput.value = "";
+  endInput.value = "";
 }
 
-onMounted(async () => {
-  if (!mapContainer.value) return;
+async function searchAddress(type: "start" | "end") {
+  const query = type === "start" ? startInput.value : endInput.value;
+  if (query.length < 3) {
+    if (type === "start") startResults.value = [];
+    else endResults.value = [];
+    return;
+  }
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+    query
+  )}&addressdetails=1&limit=5`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (type === "start") startResults.value = data;
+  else endResults.value = data;
+}
 
-  // Инициализация карты
-  map.value = L.map(mapContainer.value).setView(props.center, props.zoom);
-
-  // Добавление базового слоя
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  }).addTo(map.value);
-
-  // Загрузка и добавление данных о дорогах
-  const roadsData = await loadRoadsData();
-  if (roadsData) {
-    roadsLayer.value = L.geoJSON(roadsData, {
-      style: roadStyle,
-      onEachFeature: (feature, layer) => {
-        // Добавляем всплывающую подсказку с информацией о дороге
-        if (feature.properties && feature.properties.name) {
-          layer.bindPopup(
-            `<b>${feature.properties.name}</b><br>Тип: ${
-              feature.properties.highway || "не указан"
-            }`
-          );
-        }
+function setWaypoint(type: "start" | "end", place: any) {
+  if (!map.value) return;
+  const latlng = L.latLng(place.lat, place.lon);
+  if (!routingControl.value) {
+    routingControl.value = L.Routing.control({
+      waypoints: [],
+      router: L.Routing.osrmv1({
+        serviceUrl: "https://router.project-osrm.org/route/v1",
+      }),
+      lineOptions: {
+        styles: [{ color: "blue", weight: 4 }],
       },
+      show: false,
+      addWaypoints: true,
+      draggableWaypoints: true,
+      routeWhileDragging: true,
     }).addTo(map.value);
+  }
 
-    // Автоматическое изменение границ карты под загруженные данные
-    map.value.fitBounds(roadsLayer.value.getBounds());
+  let waypoints = routingControl.value.getWaypoints();
+
+  if (type === "start") {
+    waypoints[0] = latlng;
+  } else {
+    waypoints[1] = latlng;
+  }
+
+  routingControl.value.setWaypoints(waypoints);
+  routeInfo.value = null;
+}
+
+watch(startInput, async (val) => {
+  if (
+    startResults.value.length === 1 &&
+    val === startResults.value[0].display_name
+  ) {
+    setWaypoint("start", startResults.value[0]);
   }
 });
 
-onUnmounted(() => {
-  if (map.value) {
-    map.value.remove();
+watch(endInput, async (val) => {
+  if (
+    endResults.value.length === 1 &&
+    val === endResults.value[0].display_name
+  ) {
+    setWaypoint("end", endResults.value[0]);
   }
+});
+
+onMounted(() => {
+  if (!mapContainer.value) return;
+  map.value = L.map(mapContainer.value).setView([25.2744, 55.3082], 10);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "OpenStreetMap contributors",
+  }).addTo(map.value);
+
+  // Listen for routing events to update info panel
+  map.value.on("routingroutefound", (e: any) => {
+    if (!e.route) return;
+    routeInfo.value = {
+      distance: e.route.summary.totalDistance,
+      time: e.route.summary.totalTime,
+    };
+  });
 });
 </script>
 <template>
-  <div ref="mapContainer" class="map-container"></div>
+  <div class="map-wrapper">
+    <div class="controls">
+      <input
+        type="text"
+        v-model="startInput"
+        @input="searchAddress('start')"
+        placeholder="Введите старт"
+        list="start-list"
+      />
+      <datalist id="start-list">
+        <option
+          v-for="item in startResults"
+          :key="item.place_id"
+          :value="item.display_name"
+        />
+      </datalist>
+
+      <input
+        type="text"
+        v-model="endInput"
+        @input="searchAddress('end')"
+        placeholder="Введите финиш"
+        list="end-list"
+      />
+      <datalist id="end-list">
+        <option
+          v-for="item in endResults"
+          :key="item.place_id"
+          :value="item.display_name"
+        />
+      </datalist>
+
+      <button @click="clearRoute">Очистить маршрут</button>
+    </div>
+
+    <div ref="mapContainer" class="map-container"></div>
+
+    <div v-if="routeInfo" class="route-info">
+      <p>Расстояние: {{ (routeInfo.distance / 1000).toFixed(2) }} км</p>
+      <p>Время: {{ (routeInfo.time / 60).toFixed(0) }} мин</p>
+    </div>
+  </div>
 </template>
-<style>
+<style scoped>
+.map-wrapper {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+.controls {
+  margin-bottom: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.controls input {
+  padding: 6px 8px;
+  font-size: 14px;
+  flex: 1;
+}
+
+.controls button {
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
 .map-container {
   width: 100%;
   height: 600px;
-  min-height: 400px;
+  border: 1px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
 }
 
-/* Исправление для корректного отображения иконок маркеров */
-:global(.leaflet-marker-icon),
-:global(.leaflet-div-icon) {
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="%23ff0000"><path d="M16 2a12 12 0 0 0-12 12c0 10 12 20 12 20s12-10 12-20a12 12 0 0 0-12-12zm0 17a5 5 0 1 1 5-5 5 5 0 0 1-5 5z"/></svg>') !important;
+.route-info {
+  margin-top: 10px;
+  font-weight: bold;
 }
 </style>

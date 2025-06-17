@@ -7,12 +7,12 @@
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: $btn_blue;
+    background-color: blue;
     border-radius: 60px;
   }
   
   &::-webkit-scrollbar-track {
-    background: $bg_gray;
+    background: $gray;
   }
 }
 
@@ -22,7 +22,7 @@ body {
   font-size: 16px;
   font-weight: 400;
   line-height: 125%;
-  background-color: $bg_white;
+  background-color: rgb(186, 170, 170);
   color: $txt;
   overflow-x: hidden;
   box-sizing: border-box;

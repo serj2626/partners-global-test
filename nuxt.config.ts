@@ -2,8 +2,8 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-05-15",
   devtools: { enabled: true },
-  modules: ["nuxt-icon"],
-  css: ["leaflet/dist/leaflet.css", "@/assets/scss/global.scss"],
+  modules: ["nuxt-icon", "nuxt3-leaflet"],
+  css: ["@/assets/scss/global.scss"],
   vite: {
     vue: {
       script: {
