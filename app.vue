@@ -1,6 +1,5 @@
 <template>
   <div class="map container">
-    <h1>Интерактивная карта</h1>
     <ClientOnly>
     <MapBox />
     </ClientOnly>
@@ -8,9 +7,11 @@
 </template>
 <style lang="scss">
 .map {
+  height: 100vh;
   padding: 50px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 </style>
