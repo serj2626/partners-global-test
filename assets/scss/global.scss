@@ -1,0 +1,58 @@
+@use 'reset';
+// html {
+//   scroll-padding: 100px 0 0 0;
+//   scroll-behavior: smooth;
+//   overflow-y: scroll; /* Обеспечивает всегда вертикальный скролл */
+//   scrollbar-color: $teal transparent;
+// }
+
+* {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 1px;
+    background-color: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: $btn_blue;
+    border-radius: 60px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: $bg_gray;
+  }
+}
+
+
+body {
+  // font-family: $ff_main, $ff_second, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 125%;
+  background-color: $bg_white;
+  color: $txt;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+.container {
+  padding: 0 15px;
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+
+  @include mediaMobile() {
+    max-width: unset;
+  }
+
+  @include mediaTablet() {
+    width: 760px;
+  }
+
+  @include mediaLaptop() {
+    width: 970px;
+  }
+
+  @include mediaDesktop() {
+    width: 1200px;
+  }
+}

@@ -1,0 +1,53 @@
+// Fonts
+$ff_main: "Onest AlfaSMS", sans-serif;
+$ff_second: "Nunito AlfaSMS", sans-serif;
+
+// Easing
+$default_cubic: 0.2s cubic-bezier(0.3, 0.6, 0.67, 0.83);
+$cubic_long: 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+$default_ease: 0.6s ease;
+$fast_ease: 0.2s ease;
+
+// VARS
+$btn_radius: 8px;
+$card_radius: 16px;
+
+// Colors
+$txt: #000000;
+$txt_white: #ffffff;
+$white: #ffffff;
+$txt_gray: #88838e;
+$txt_footer_link: #023346;
+
+$teal: #009fc1;
+$error: #cf0000;
+
+$bg_footer: #888d8e;
+
+$btn_red: #f65858;
+$btn_gray: rgba(0, 0, 0, 0.06);
+$btn_blue: #688fa1;
+$bg_gray: #e6ecec;
+$btn_green: #31b58e;
+$btn_teal: #30aec8;
+$btn_blue: #1877f2;
+
+$input_border: 1px solid #ced4da;
+
+$bg_white: #fbfcfc;
+$bg_linear: linear-gradient(
+  112.45deg,
+  #5d03d0 37.25%,
+  #464ff7 63.35%,
+  #5d03d0 79%
+);
+$bg_linear_second: linear-gradient(190deg, #0f849eaf, #009ec1c3),
+  url(/bg/bg.png);
+$bg_tariff_card: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+$bg_gradient: linear-gradient(90deg, #63e8aa 0%, #1a96ef 100%);
+
+$mobile: 576px;
+$tablet: 768px;
+$laptop: 992px;
+$desktop: 1200px;
+$desctop_wide: 1400px;

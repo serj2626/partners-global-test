@@ -1,0 +1,225 @@
+@use "./_vars.scss" as *;
+
+@mixin mediaMobile() {
+  @media screen and (min-width: $mobile) {
+    @content;
+  }
+}
+
+@mixin mediaTablet() {
+  @media screen and (min-width: $tablet) {
+    @content;
+  }
+}
+@mixin mediaLaptop() {
+  @media screen and (min-width: $laptop) {
+    @content;
+  }
+}
+@mixin mediaDesktop() {
+  @media screen and (min-width: $desktop) {
+    @content;
+  }
+}
+
+@mixin mediaDesktopWide() {
+  @media screen and (min-width: $desctop_wide) {
+    @content;
+  }
+}
+
+@mixin mediaCustom($width) {
+  @media screen and (min-width: $width) {
+    @content;
+  }
+}
+
+@mixin txt_property($size: 16, $weight: 400, $height: 1.42857, $color: $txt) {
+  font-size: #{$size}px;
+  font-weight: $weight;
+  line-height: $height;
+  color: $color;
+}
+
+@mixin card_shadow() {
+  box-shadow: 5px 5px 15px 5px rgba(0, 0, 0, 0.1);
+}
+
+@mixin link() {
+  color: $txt_footer_link;
+  transition: color $fast_ease;
+
+  &:hover {
+    color: $teal;
+  }
+}
+
+@mixin header_link {
+  transition: all $fast_ease;
+  font-size: 15px;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+@mixin btn_close_form {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all $fast_ease;
+  color: $bg_footer;
+
+  &:active {
+    scale: 0.8;
+  }
+}
+
+@mixin main_block_content() {
+  padding-top: 60px;
+  margin-bottom: 16px;
+
+  @include mediaTablet {
+    padding-top: 100px;
+  }
+  @include mediaLaptop {
+    padding-top: 140px;
+  }
+}
+
+@mixin txt_title_h1() {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.1;
+
+  @include mediaTablet() {
+    font-size: 48px;
+  }
+  @include mediaLaptop() {
+    font-size: 36px;
+  }
+  @include mediaDesktop() {
+    font-size: 48px;
+  }
+}
+
+@mixin txt_title_h2() {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+
+  @include mediaTablet() {
+    font-size: 30px;
+  }
+  @include mediaLaptop() {
+    font-size: 34px;
+  }
+  @include mediaDesktop() {
+    font-size: 38px;
+  }
+}
+
+@mixin txt_title_h3() {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: $txt;
+
+  @include mediaTablet() {
+    font-size: 18px;
+  }
+  @include mediaLaptop() {
+    line-height: 1.5;
+  }
+}
+
+@mixin text_overflow($count) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $count;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@mixin modal_arrow($left: 50%, $top: 0px) {
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: 100;
+    top: $top;
+    left: $left;
+    transform: rotate(45deg) #{if($left == 50%, "translateX(-50%) ", "")};
+    width: 20px;
+    height: 20px;
+    background-color: $txt_white;
+    box-shadow: 0 0 20px rgb(240, 241, 241);
+  }
+}
+
+@mixin border_gradient() {
+  position: relative;
+  color: $txt;
+  background: $bg_gradient;
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  display: inline-block;
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: $bg_gradient;
+    border-radius: 3px;
+  }
+}
+
+@mixin tariff_card() {
+  margin-bottom: 100px;
+  width: 100%;
+  padding: 2.5rem;
+  border-radius: 16px;
+  background: $bg_tariff_card;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      rgba(99, 232, 170, 0.1) 0%,
+      rgba(26, 150, 239, 0.1) 50%,
+      rgba(5, 249, 135, 0.1) 100%
+    );
+    animation: gradient-shine 8s ease infinite;
+    z-index: -1;
+  }
+}
