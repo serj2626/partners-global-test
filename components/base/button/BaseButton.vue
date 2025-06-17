@@ -10,7 +10,7 @@ interface IBaseButton {
 const {
   color = "#d38f56",
   size = "md",
-  radius = "10px",
+  radius = "5px",
   label,
 } = defineProps<IBaseButton>();
 </script>

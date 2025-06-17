@@ -110,10 +110,16 @@ onMounted(() => {
 });
 </script>
 <template>
-  <div class="map-wrapper">
-    <div class="controls">
-      <input
+  <div class="map-box">
+    <div class="map-box__controls">
+      <!-- <input
         type="text"
+        v-model="startInput"
+        @input="searchAddress('start')"
+        placeholder="Введите старт"
+        list="start-list"
+      /> -->
+      <BaseInput
         v-model="startInput"
         @input="searchAddress('start')"
         placeholder="Введите старт"
@@ -127,11 +133,17 @@ onMounted(() => {
         />
       </datalist>
 
-      <input
+      <!-- <input
         type="text"
         v-model="endInput"
         @input="searchAddress('end')"
         placeholder="Введите финиш"
+        list="end-list"
+      /> -->
+      <BaseInput
+        v-model="endInput"
+        @input="searchAddress('end')"
+        placeholder="Введите старт"
         list="end-list"
       />
       <datalist id="end-list">
@@ -142,7 +154,7 @@ onMounted(() => {
         />
       </datalist>
 
-      <button @click="clearRoute">Очистить маршрут</button>
+      <BaseButton label="Очистить маршрут" @click="clearRoute" style="width: 100%;" />
     </div>
 
     <div ref="mapContainer" class="map-container"></div>
@@ -153,30 +165,21 @@ onMounted(() => {
     </div>
   </div>
 </template>
-<style scoped>
-.map-wrapper {
+<style scoped lang="scss">
+.map-box {
   width: 100%;
-  max-width: 1000px;
   margin: 0 auto;
-  font-family: Arial, sans-serif;
-}
+  display: grid;
+  grid-template-columns: 1fr 4fr;
+  gap: 30px;
 
-.controls {
-  margin-bottom: 10px;
-  display: flex;
-  gap: 10px;
-}
-
-.controls input {
-  padding: 6px 8px;
-  font-size: 14px;
-  flex: 1;
-}
-
-.controls button {
-  padding: 6px 12px;
-  cursor: pointer;
-  font-weight: bold;
+  &__controls {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
 }
 
 .map-container {
